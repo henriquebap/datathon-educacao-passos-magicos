@@ -20,7 +20,7 @@ A Associação Passos Mágicos atua na transformação da vida de crianças e jo
 
 ### Solução Proposta
 
-Pipeline completa de Machine Learning com deploy em **Streamlit**, incluindo análise exploratória, modelo preditivo e monitoramento de drift.
+Pipeline completa de Machine Learning com deploy via Docker (FastAPI) no **HuggingFace Spaces**, incluindo análise exploratória, modelo preditivo e monitoramento de drift.
 
 ### Stack Tecnológica
 
@@ -28,8 +28,8 @@ Pipeline completa de Machine Learning com deploy em **Streamlit**, incluindo an�
 |---|---|
 | Linguagem | Python 3.11 |
 | Frameworks ML | scikit-learn, pandas, numpy, XGBoost |
-| Frontend/Deploy | Streamlit |
-| API (complementar) | FastAPI + Uvicorn |
+| API / Deploy | FastAPI + Uvicorn (Docker no HuggingFace Spaces) |
+| Dashboard | Streamlit |
 | Serialização | joblib |
 | Testes | pytest |
 | Containerização | Docker (multi-stage build) |
@@ -45,6 +45,8 @@ datathon/
 ├── data/
 │   ├── raw/                        # Dataset PEDE (CSV/Excel)
 │   └── processed/                  # Dados processados
+├── docs/
+│   └── GUIA_API.md                 # Guia completo de uso da API
 ├── models/                         # Modelos serializados (.joblib)
 ├── notebooks/
 │   ├── 01_EDA.ipynb                # Análise Exploratória dos Dados
@@ -97,7 +99,72 @@ datathon/
 
 ---
 
-## 3. Como Executar
+## 3. API em Produção (Deploy)
+
+> **A API está disponível publicamente e pode ser acessada diretamente pelo navegador — sem instalação.**
+
+### URL Base
+
+```
+https://henriquebap-datathon-educacao-passos-magicos.hf.space
+```
+
+### Endpoints Disponíveis
+
+| Endpoint | Método | Descrição |
+|---|---|---|
+| [`/docs`](https://henriquebap-datathon-educacao-passos-magicos.hf.space/docs) | GET | **Documentação interativa (Swagger UI)** — teste os endpoints direto no navegador |
+| [`/health`](https://henriquebap-datathon-educacao-passos-magicos.hf.space/health) | GET | Verifica se a API e o modelo estão carregados |
+| `/predict` | POST | Predição individual de risco de defasagem |
+| `/predict/batch` | POST | Predição para múltiplos alunos de uma vez |
+| [`/metrics`](https://henriquebap-datathon-educacao-passos-magicos.hf.space/metrics) | GET | Métricas de performance do modelo |
+| [`/monitoring/drift`](https://henriquebap-datathon-educacao-passos-magicos.hf.space/monitoring/drift) | GET | Monitoramento de drift nos dados |
+
+### Exemplo de Predição (curl)
+
+```bash
+curl -X POST https://henriquebap-datathon-educacao-passos-magicos.hf.space/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "INDE_2022": 7.5,
+    "IAA_2022": 6.8,
+    "IEG_2022": 7.0,
+    "IPS_2022": 6.5,
+    "IDA_2022": 7.2,
+    "IPP_2022": 5.5,
+    "IPV_2022": 6.0,
+    "IDADE_ALUNO_2022": 13,
+    "PEDRA_2022": "Ametista",
+    "ANOS_PM_2022": 3
+  }'
+```
+
+Resposta:
+
+```json
+{
+  "prediction": 1,
+  "risk_level": "HIGH",
+  "probability": { "no_risk": 0.003, "at_risk": 0.997 },
+  "model_type": "XGBClassifier",
+  "timestamp": "2026-02-26T15:30:00+00:00"
+}
+```
+
+Para mais exemplos (Python, batch, Swagger), consulte o **[Guia Completo da API](docs/GUIA_API.md)**.
+
+### Links do Projeto
+
+| Recurso | URL |
+|---|---|
+| API (produção) | https://henriquebap-datathon-educacao-passos-magicos.hf.space |
+| Swagger UI | https://henriquebap-datathon-educacao-passos-magicos.hf.space/docs |
+| Modelo (artefatos) | https://huggingface.co/henriquebap/datathon-educacao-passos-magicos-model |
+| Código fonte | https://github.com/henriquebap/datathon-educacao-passos-magicos |
+
+---
+
+## 4. Como Executar Localmente
 
 ### Pré-requisitos
 
@@ -107,8 +174,8 @@ datathon/
 ### Instalação
 
 ```bash
-git clone <repo-url>
-cd datathon
+git clone https://github.com/henriquebap/datathon-educacao-passos-magicos.git
+cd datathon-educacao-passos-magicos
 
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -159,9 +226,9 @@ pytest tests/ -v
 
 ---
 
-## 4. Pipeline de Machine Learning
+## 5. Pipeline de Machine Learning
 
-### 4.1 Pré-processamento (`src/preprocessing.py`)
+### 5.1 Pré-processamento (`src/preprocessing.py`)
 
 1. **Remoção de identificadores**: colunas como NOME, ID, MATRÍCULA
 2. **Tratamento de valores ausentes**: mediana para numéricos, moda para categóricos
@@ -169,20 +236,20 @@ pytest tests/ -v
 4. **Normalização**: StandardScaler para features numéricas
 5. **Split**: 80/20 estratificado
 
-### 4.2 Engenharia de Features (`src/feature_engineering.py`)
+### 5.2 Engenharia de Features (`src/feature_engineering.py`)
 
 1. **Features temporais**: diferenças ano-a-ano, tendência, média e desvio padrão
 2. **Indicadores compostos**: Academic Composite, Engagement Composite, Risk Score
 3. **Features de interação**: INDE×IEG, IPS×IAA, Bolsista×INDE
 4. **Gap idade-fase**: diferença entre idade real e fase esperada
 
-### 4.3 Treinamento (`src/train.py`)
+### 5.3 Treinamento (`src/train.py`)
 
 **Modelos avaliados:** Logistic Regression, Random Forest, Gradient Boosting, XGBoost, SVM
 
 **Processo:** Cross-validation estratificada (5 folds), seleção automática por F1-Score, GridSearchCV para tuning.
 
-### 4.4 Justificativa da Métrica (F1-Score)
+### 5.4 Justificativa da Métrica (F1-Score)
 
 No contexto de defasagem escolar, precisamos balancear:
 - **Recall**: não deixar de identificar alunos em risco (minimizar falsos negativos)
@@ -190,13 +257,13 @@ No contexto de defasagem escolar, precisamos balancear:
 
 O F1-Score equilibra ambos. Utilizamos `class_weight="balanced"` para lidar com desbalanceamento entre as classes.
 
-### 4.5 Tratamento de Data Leakage
+### 5.5 Tratamento de Data Leakage
 
 As colunas **IAN** (Indicador de Adequação de Nível) e **NIVEL_IDEAL** são removidas do treinamento e da inferência, pois são proxies diretos da variável alvo (DEFASAGEM) — incluí-las seria equivalente a dar a resposta ao modelo.
 
 ---
 
-## 5. Notebooks
+## 6. Notebooks
 
 | Notebook | Conteúdo |
 |---|---|
@@ -206,7 +273,7 @@ As colunas **IAN** (Indicador de Adequação de Nível) e **NIVEL_IDEAL** são r
 
 ---
 
-## 6. Sobre a Associação Passos Mágicos
+## 7. Sobre a Associação Passos Mágicos
 
 A Associação Passos Mágicos tem 32 anos de atuação, transformando a vida de crianças e jovens de baixa renda por meio da educação. Idealizada por Michelle Flues e Dimetri Ivanoff, atua em Embu-Guaçu oferecendo educação de qualidade, auxílio psicológico/psicopedagógico, ampliação de visão de mundo e protagonismo.
 
