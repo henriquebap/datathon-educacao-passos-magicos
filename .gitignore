@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Data (datasets proprietarios da competicao)
+data/raw/
+data/processed/
+data/*.zip
+
+# Models (manter joblib no repo para avaliacao funcionar out-of-the-box)
+# models/*.joblib
+models/*.pkl
+models/*.pickle
+models/predictions_log.jsonl
+models/model_metrics.jsonl
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Streamlit cache
+streamlit_app/.streamlit/
+
+# Docker
+# (manter .dockerignore versionado)
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Monitoring reports
+monitoring/reports/*.html
+
+# Pytest
+.pytest_cache/

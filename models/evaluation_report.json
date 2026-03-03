@@ -1,0 +1,29 @@
+{
+  "metrics": {
+    "accuracy": 0.625,
+    "precision": 0.5,
+    "recall": 0.3333,
+    "f1_score": 0.4,
+    "auc_roc": 0.75
+  },
+  "confusion_matrix": {
+    "matrix": [
+      [
+        8,
+        2
+      ],
+      [
+        4,
+        2
+      ]
+    ],
+    "true_negatives": 8,
+    "false_positives": 2,
+    "false_negatives": 4,
+    "true_positives": 2
+  },
+  "classification_report": "               precision    recall  f1-score   support\n\nSem Risco (0)       0.67      0.80      0.73        10\n Em Risco (1)       0.50      0.33      0.40         6\n\n     accuracy                           0.62        16\n    macro avg       0.58      0.57      0.56        16\n weighted avg       0.60      0.62      0.60        16\n",
+  "feature_importance": [],
+  "model_type": "SVC",
+  "n_test_samples": 16
+}

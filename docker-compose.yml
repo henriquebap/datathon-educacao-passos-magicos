@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - API_ENV=development
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_REPO_ID=${HF_REPO_ID}
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./monitoring/reports:/app/monitoring/reports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
