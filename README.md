@@ -281,4 +281,4 @@ A Associação Passos Mágicos tem 32 anos de atuação, transformando a vida de
 
 ## Licença
 
-Projeto acadêmico - PosTech FIAP Datathon 2024/2025.
+Projeto acadêmico - PosTech FIAP Datathon 2025/2026.
