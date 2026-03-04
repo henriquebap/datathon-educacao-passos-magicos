@@ -114,6 +114,6 @@ st.markdown(
 
     ---
 
-    *Projeto acadêmico — PosTech FIAP Datathon 2024/2025*
+    *Projeto acadêmico — PosTech FIAP Datathon 2025/2026*
     """
 )
