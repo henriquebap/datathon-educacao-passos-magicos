@@ -1,10 +1,8 @@
-"""Pagina de Performance do Modelo."""
+"""Pagina de Performance - consome /metrics e /monitoring/drift da API."""
 
-import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -13,41 +11,42 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.utils import MODELS_DIR
+from streamlit_app.api_client import API_URL, health_check, get_metrics, get_drift
 
 st.set_page_config(page_title="Performance - Passos Mágicos", page_icon="📈", layout="wide")
 st.title("📈 Performance do Modelo")
 st.divider()
 
-REPORT_PATH = MODELS_DIR / "evaluation_report.json"
-
-if not REPORT_PATH.exists():
-    st.warning(
-        "Relatório de avaliação não encontrado. Execute o treinamento primeiro:\n\n"
-        "```bash\npython run_training.py --synthetic\n```"
-    )
+# --- Health check ---
+try:
+    status = health_check()
+    if not status.get("model_loaded"):
+        st.warning("API online, mas modelo não carregado.")
+        st.stop()
+except Exception as e:
+    st.error(f"API indisponível em `{API_URL}` — {e}")
     st.stop()
 
-with open(REPORT_PATH) as f:
-    report = json.load(f)
+# --- Métricas do modelo ---
+st.header("1. Métricas do Modelo")
 
-metrics = report.get("metrics", {})
-cm_data = report.get("confusion_matrix", {})
-feat_imp = report.get("feature_importance", [])
-model_type = report.get("model_type", "N/A")
-n_samples = report.get("n_test_samples", 0)
+try:
+    metrics_data = get_metrics()
+except Exception as e:
+    st.error(f"Erro ao buscar métricas: {e}")
+    st.stop()
 
-# --- Resumo ---
-st.header("1. Resumo do Modelo")
+model_type = metrics_data.get("model_type", "N/A")
+metrics = metrics_data.get("metrics", {})
+prediction_stats = metrics_data.get("prediction_stats", {})
 
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.metric("Modelo Selecionado", model_type)
-    st.metric("Amostras de Teste", n_samples)
+    st.metric("Modelo em Produção", model_type)
+    st.metric("Total de Predições", prediction_stats.get("total_predictions", 0))
 
 with col2:
-    metric_cols = st.columns(5)
     metric_labels = {
         "accuracy": "Acurácia",
         "precision": "Precisão",
@@ -55,150 +54,109 @@ with col2:
         "f1_score": "F1-Score",
         "auc_roc": "AUC-ROC",
     }
-    for i, (key, label) in enumerate(metric_labels.items()):
-        val = metrics.get(key)
-        if val is not None:
-            metric_cols[i].metric(label, f"{val:.4f}")
+    available = {k: v for k, v in metric_labels.items() if metrics.get(k) is not None}
+
+    if available:
+        metric_cols = st.columns(len(available))
+        for i, (key, label) in enumerate(available.items()):
+            metric_cols[i].metric(label, f"{metrics[key]:.4f}")
+    else:
+        st.info("Métricas de avaliação não disponíveis na API.")
 
 st.divider()
 
-# --- Metricas em barras ---
-st.header("2. Comparação de Métricas")
+# --- Gráfico de métricas ---
+if available:
+    st.header("2. Comparação de Métricas")
 
-metric_names = [v for k, v in metric_labels.items() if metrics.get(k) is not None]
-metric_values = [metrics[k] for k in metric_labels if metrics.get(k) is not None]
+    metric_names = list(available.values())
+    metric_values = [metrics[k] for k in available]
+    colors = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6"]
 
-fig_metrics = go.Figure(go.Bar(
-    x=metric_names,
-    y=metric_values,
-    marker_color=["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6"],
-    text=[f"{v:.4f}" for v in metric_values],
-    textposition="auto",
-))
-fig_metrics.update_layout(
-    title=f"Métricas de Avaliação — {model_type}",
-    yaxis_title="Valor",
-    yaxis=dict(range=[0, 1]),
-    height=400,
-)
-st.plotly_chart(fig_metrics, use_container_width=True)
-
-st.divider()
-
-# --- Confusion Matrix ---
-st.header("3. Matriz de Confusão")
-
-cm_matrix = cm_data.get("matrix", [[0, 0], [0, 0]])
-
-col_cm1, col_cm2 = st.columns([1, 1])
-
-with col_cm1:
-    labels = ["Sem Risco (0)", "Em Risco (1)"]
-    fig_cm = px.imshow(
-        cm_matrix,
-        x=labels, y=labels,
-        color_continuous_scale="Blues",
-        title="Matriz de Confusão",
-        text_auto=True,
+    fig_metrics = go.Figure(go.Bar(
+        x=metric_names,
+        y=metric_values,
+        marker_color=colors[:len(metric_names)],
+        text=[f"{v:.4f}" for v in metric_values],
+        textposition="auto",
+    ))
+    fig_metrics.update_layout(
+        title=f"Métricas de Avaliação — {model_type}",
+        yaxis_title="Valor",
+        yaxis=dict(range=[0, 1]),
+        height=400,
     )
-    fig_cm.update_layout(
-        xaxis_title="Predição",
-        yaxis_title="Real",
-        width=500, height=450,
-    )
-    st.plotly_chart(fig_cm, use_container_width=True)
+    st.plotly_chart(fig_metrics, use_container_width=True)
+    st.divider()
 
-with col_cm2:
-    st.markdown("### Detalhamento")
-    tn = cm_data.get("true_negatives", 0)
-    fp = cm_data.get("false_positives", 0)
-    fn = cm_data.get("false_negatives", 0)
-    tp = cm_data.get("true_positives", 0)
+# --- Estatísticas de predições ---
+st.header("3. Estatísticas de Predições em Produção")
 
-    st.markdown(f"""
-    | Métrica | Valor | Significado |
-    |---------|-------|-------------|
-    | **Verdadeiros Negativos** | {tn} | Corretamente sem risco |
-    | **Verdadeiros Positivos** | {tp} | Corretamente em risco |
-    | **Falsos Positivos** | {fp} | Alarme falso |
-    | **Falsos Negativos** | {fn} | Risco não detectado |
-    """)
+total = prediction_stats.get("total_predictions", 0)
 
-    st.markdown(f"""
-    ---
-    **Interpretação**: O modelo identificou corretamente **{tp}** alunos em risco
-    e **{tn}** alunos sem risco. Houve **{fn}** alunos em risco que não foram
-    detectados (falsos negativos) — minimizar este número é prioritário.
-    """)
+if total > 0:
+    col_s1, col_s2, col_s3 = st.columns(3)
+
+    risk_dist = prediction_stats.get("risk_distribution", {})
+    avg_prob = prediction_stats.get("avg_probability_at_risk")
+
+    col_s1.metric("Total de Predições", total)
+    col_s2.metric("Alto Risco", risk_dist.get("HIGH", 0))
+    col_s3.metric("Baixo Risco", risk_dist.get("LOW", 0))
+
+    if avg_prob is not None:
+        st.metric("Probabilidade Média de Risco", f"{avg_prob:.1%}")
+
+    if risk_dist:
+        fig_dist = px.pie(
+            values=list(risk_dist.values()),
+            names=["Alto Risco" if k == "HIGH" else "Baixo Risco" for k in risk_dist],
+            title="Distribuição das Predições em Produção",
+            color_discrete_sequence=["#e74c3c", "#2ecc71"],
+        )
+        st.plotly_chart(fig_dist, use_container_width=True)
+else:
+    st.info("Nenhuma predição realizada ainda. Use a página **Modelo Preditivo** para gerar predições.")
 
 st.divider()
 
-# --- Classification Report ---
-st.header("4. Relatório de Classificação")
+# --- Drift ---
+st.header("4. Monitoramento de Drift")
 
-class_report = report.get("classification_report", "")
-if class_report:
-    st.code(class_report, language=None)
+try:
+    drift_data = get_drift()
+
+    drift_detected = drift_data.get("drift_detected")
+    details = drift_data.get("details", {})
+
+    if drift_detected is None:
+        st.info(details.get("message", "Dados insuficientes para análise de drift."))
+    elif drift_detected:
+        st.error("⚠️ **Drift detectado** nos dados de produção!")
+    else:
+        st.success("✅ Sem drift detectado — modelo estável.")
+
+    with st.expander("Detalhes do monitoramento"):
+        st.json(details)
+
+except Exception as e:
+    st.warning(f"Drift não disponível: {e}")
+
+st.divider()
+
+# --- Justificativa ---
+st.header("5. Justificativa da Métrica")
 
 st.markdown("""
-**Justificativa da Métrica F1-Score**:
+**Por que F1-Score?**
 
 No contexto de defasagem escolar, o F1-Score é a métrica principal porque equilibra:
 - **Recall (Sensibilidade)**: Capacidade de detectar alunos em risco. Falsos negativos
   significam alunos em risco que não receberão suporte.
 - **Precision**: Evitar alarmes falsos que sobrecarreguem a equipe pedagógica.
+
+Utilizamos `class_weight="balanced"` para lidar com o desbalanceamento entre as classes.
 """)
 
 st.divider()
-
-# --- Feature Importance ---
-st.header("5. Importância das Features")
-
-if feat_imp:
-    imp_df = pd.DataFrame(feat_imp)
-
-    top_n = st.slider("Top N features:", 5, min(30, len(imp_df)), 15)
-    top_features = imp_df.head(top_n)
-
-    fig_imp = px.bar(
-        top_features,
-        x="importance",
-        y="feature",
-        orientation="h",
-        title=f"Top {top_n} Features Mais Importantes",
-        color="importance",
-        color_continuous_scale="Viridis",
-    )
-    fig_imp.update_layout(
-        yaxis=dict(autorange="reversed"),
-        height=max(400, top_n * 30),
-        xaxis_title="Importância",
-        yaxis_title="",
-    )
-    st.plotly_chart(fig_imp, use_container_width=True)
-
-    with st.expander("Tabela completa de importância"):
-        st.dataframe(imp_df, use_container_width=True)
-else:
-    st.info("Feature importance não disponível para este modelo.")
-
-st.divider()
-
-# --- Historico de Metricas ---
-st.header("6. Histórico de Métricas")
-
-metrics_log = MODELS_DIR / "model_metrics.jsonl"
-if metrics_log.exists():
-    entries = []
-    with open(metrics_log) as f:
-        for line in f:
-            if line.strip():
-                entries.append(json.loads(line))
-
-    if entries:
-        history_df = pd.DataFrame(entries)
-        st.dataframe(history_df, use_container_width=True)
-    else:
-        st.info("Sem registros no histórico.")
-else:
-    st.info("Arquivo de histórico não encontrado.")
+st.caption(f"Dados obtidos via API: `{API_URL}`")

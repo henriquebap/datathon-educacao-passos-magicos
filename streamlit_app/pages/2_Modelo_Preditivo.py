@@ -1,51 +1,38 @@
-"""Pagina de Predicao - Modelo Preditivo."""
+"""Pagina de Predicao - consome a API FastAPI via HTTP."""
 
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.utils import MODELS_DIR, NUMERIC_INDICATORS, PEDRA_MAP
+from streamlit_app.api_client import API_URL, health_check, predict, predict_batch
 
 st.set_page_config(page_title="Predição - Passos Mágicos", page_icon="🔮", layout="wide")
 st.title("🔮 Modelo Preditivo")
 st.markdown("Insira os dados do estudante para prever o risco de defasagem escolar.")
 st.divider()
 
-MODEL_PATH = MODELS_DIR / "model.joblib"
-PIPELINE_PATH = MODELS_DIR / "pipeline.joblib"
-
-
-@st.cache_resource
-def load_predictor():
-    """Load model and pipeline artifacts."""
-    if not MODEL_PATH.exists() or not PIPELINE_PATH.exists():
-        return None
-    try:
-        from src.predict import Predictor
-        return Predictor(str(MODEL_PATH), str(PIPELINE_PATH))
-    except Exception as e:
-        st.error(f"Erro ao carregar modelo: {e}")
-        return None
-
-
-predictor = load_predictor()
-
-if predictor is None:
-    st.warning(
-        "Modelo não encontrado. Execute o treinamento primeiro:\n\n"
-        "```bash\npython run_training.py --synthetic\n```"
-    )
+# --- Health check ---
+try:
+    status = health_check()
+    if status.get("model_loaded"):
+        st.success(f"API conectada — modelo **{status.get('model_type', 'N/A')}** carregado")
+    else:
+        st.warning("API online, mas modelo não carregado.")
+        st.stop()
+except Exception as e:
+    st.error(f"API indisponível em `{API_URL}` — {e}")
+    st.caption("Configure `API_URL` como variável de ambiente para apontar para outra instância.")
     st.stop()
 
-st.success(f"Modelo carregado: **{type(predictor.model).__name__}**")
-
+# --- Formulário ---
 st.header("Dados do Estudante")
+
+PEDRA_OPTIONS = ["Quartzo", "Ágata", "Ametista", "Topázio"]
 
 col1, col2, col3 = st.columns(3)
 
@@ -65,7 +52,7 @@ with col2:
 with col3:
     st.subheader("Dados Gerais")
     idade = st.number_input("Idade do Aluno", 6, 25, 13)
-    pedra = st.selectbox("Classificação PEDRA", list(PEDRA_MAP.keys()))
+    pedra = st.selectbox("Classificação PEDRA", PEDRA_OPTIONS)
     fase = st.number_input("Fase no Programa", 0, 8, 4)
     ponto_virada = st.selectbox("Ponto de Virada", [0, 1], format_func=lambda x: "Sim" if x else "Não")
     bolsista = st.selectbox("Bolsista", [0, 1], format_func=lambda x: "Sim" if x else "Não")
@@ -74,7 +61,7 @@ with col3:
 st.divider()
 
 if st.button("🔍 Realizar Predição", type="primary", use_container_width=True):
-    input_data = {
+    payload = {
         "INDE_2022": inde,
         "IAA_2022": iaa,
         "IEG_2022": ieg,
@@ -90,9 +77,9 @@ if st.button("🔍 Realizar Predição", type="primary", use_container_width=Tru
         "ANOS_PM_2022": anos_pm,
     }
 
-    with st.spinner("Processando predição..."):
+    with st.spinner("Enviando para a API..."):
         try:
-            result = predictor.predict(input_data)
+            result = predict(payload)
         except Exception as e:
             st.error(f"Erro na predição: {e}")
             st.stop()
@@ -140,14 +127,17 @@ if st.button("🔍 Realizar Predição", type="primary", use_container_width=Tru
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    with st.expander("Dados de entrada utilizados"):
-        st.json(input_data)
+    with st.expander("Payload enviado para a API"):
+        st.json(payload)
+
+    with st.expander("Resposta completa da API"):
+        st.json(result)
 
 st.divider()
 
-# --- Batch ---
-st.header("Predição em Lote")
-st.markdown("Faça upload de um CSV para predição em lote.")
+# --- Batch via API ---
+st.header("Predição em Lote (via API)")
+st.markdown("Faça upload de um CSV — os dados serão enviados ao endpoint `/predict/batch`.")
 
 uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
@@ -158,24 +148,27 @@ if uploaded_file is not None:
         st.dataframe(batch_df.head(), use_container_width=True)
 
         if st.button("🚀 Predição em Lote", use_container_width=True):
-            with st.spinner("Processando..."):
-                results = predictor.predict_batch(batch_df.to_dict("records"))
+            with st.spinner(f"Enviando {len(batch_df)} registros para a API..."):
+                response = predict_batch(batch_df.to_dict("records"))
 
+            predictions = response.get("predictions", [])
             results_df = pd.DataFrame([
                 {
                     "Predição": r["prediction"],
                     "Risco": r["risk_level"],
                     "P(Risco)": r["probability"]["at_risk"] if r.get("probability") else None,
                 }
-                for r in results
+                for r in predictions
             ])
 
             combined = pd.concat([batch_df.reset_index(drop=True), results_df], axis=1)
             st.dataframe(combined, use_container_width=True)
 
             risk_counts = results_df["Risco"].value_counts()
-            st.metric("Total Em Risco", int(risk_counts.get("HIGH", 0)))
-            st.metric("Total Sem Risco", int(risk_counts.get("LOW", 0)))
+            col_b1, col_b2, col_b3 = st.columns(3)
+            col_b1.metric("Total Registros", response.get("total", len(predictions)))
+            col_b2.metric("Em Risco", int(risk_counts.get("HIGH", 0)))
+            col_b3.metric("Sem Risco", int(risk_counts.get("LOW", 0)))
 
             csv_output = combined.to_csv(index=False)
             st.download_button(
