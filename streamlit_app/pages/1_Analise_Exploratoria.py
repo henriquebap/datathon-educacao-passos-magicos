@@ -62,10 +62,12 @@ if is_synthetic:
 st.header("1. Visão Geral do Dataset")
 
 col1, col2, col3, col4 = st.columns(4)
+total_cells = len(df) * len(df.columns)
+total_nulls = df.isnull().sum().sum()
 col1.metric("Registros", f"{len(df):,}")
 col2.metric("Colunas", f"{len(df.columns)}")
-col3.metric("Valores Nulos", f"{df.isnull().sum().sum():,}")
-col4.metric("% Nulos", f"{df.isnull().mean().mean():.1%}")
+col3.metric("Células Nulas", f"{total_nulls:,} de {total_cells:,}")
+col4.metric("% Células Nulas", f"{total_nulls / total_cells:.1%}")
 
 with st.expander("Ver amostra dos dados"):
     st.dataframe(df.head(20), use_container_width=True)
