@@ -1,3 +1,12 @@
+---
+title: Datathon Educacao Passos Magicos
+emoji: 🎓
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Datathon Educação - Passos Mágicos
 
 Modelo preditivo de desenvolvimento educacional para estudantes da Associação Passos Mágicos, desenvolvido como parte do **Datathon PosTech FIAP - Fase 5**.
