@@ -98,22 +98,41 @@ with col_c:
 
 st.divider()
 
+st.markdown("### Arquitetura")
+
 st.markdown(
-    """
-    ### Arquitetura
-
-    Este dashboard **consome a API REST** hospedada no HuggingFace Spaces.
-    Nenhum modelo é carregado localmente — todas as predições e métricas
-    são obtidas via chamadas HTTP aos endpoints da API.
-
-    | Página | Endpoint consumido | Descrição |
-    |--------|--------------------|-----------|
-    | **Análise Exploratória** | — (dados locais) | Visualizações e estatísticas dos dados |
-    | **Modelo Preditivo** | `POST /predict`, `POST /predict/batch` | Predições via API |
-    | **Performance do Modelo** | `GET /metrics`, `GET /monitoring/drift` | Métricas e monitoramento |
-
-    ---
-
-    *Projeto acadêmico — PosTech FIAP Datathon 2025/2026*
-    """
+    "Este dashboard **consome a API REST** hospedada no HuggingFace Spaces. "
+    "Nenhum modelo é carregado localmente — todas as predições e métricas "
+    "são obtidas via chamadas HTTP aos endpoints da API."
 )
+
+docs_url = f"{API_URL}/docs"
+redoc_url = f"{API_URL}/redoc"
+
+st.markdown(
+    f"**Acesse a API diretamente:** "
+    f"[Swagger UI (interativo)]({docs_url}) · "
+    f"[ReDoc (documentação)]({redoc_url})"
+)
+
+st.divider()
+
+st.markdown("### Endpoints Disponíveis")
+
+st.markdown(
+    f"""
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | [`/health`]({API_URL}/health) | Status da API e do modelo carregado |
+| `GET` | [`/`]({API_URL}/) | Informações gerais da API (versão, ambiente, lista de endpoints) |
+| `GET` | [`/metrics`]({API_URL}/metrics) | Métricas de avaliação do modelo (accuracy, F1, AUC-ROC, confusion matrix, feature importance) |
+| `GET` | [`/monitoring/drift`]({API_URL}/monitoring/drift) | Monitoramento de drift nas predições em produção |
+| `POST` | [`/predict`]({docs_url}#/Predi%C3%A7%C3%B5es/predict_predict_post) | Predição de risco para **um** estudante |
+| `POST` | [`/predict/batch`]({docs_url}#/Predi%C3%A7%C3%B5es/predict_batch_predict_batch_post) | Predição em lote para **múltiplos** estudantes |
+| `GET` | [`/docs`]({docs_url}) | Swagger UI — interface interativa para testar a API |
+| `GET` | [`/redoc`]({redoc_url}) | ReDoc — documentação detalhada dos schemas |
+"""
+)
+
+st.divider()
+st.caption("*Projeto acadêmico — PosTech FIAP Datathon 2025/2026*")
