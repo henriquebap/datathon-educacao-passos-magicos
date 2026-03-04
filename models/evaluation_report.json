@@ -1,29 +1,398 @@
 {
   "metrics": {
-    "accuracy": 0.625,
-    "precision": 0.5,
-    "recall": 0.3333,
-    "f1_score": 0.4,
-    "auc_roc": 0.75
+    "accuracy": 0.9259,
+    "precision": 0.9539,
+    "recall": 0.9539,
+    "f1_score": 0.9539,
+    "auc_roc": 0.9703
   },
   "confusion_matrix": {
     "matrix": [
       [
-        8,
-        2
+        43,
+        10
       ],
       [
-        4,
-        2
+        10,
+        207
       ]
     ],
-    "true_negatives": 8,
-    "false_positives": 2,
-    "false_negatives": 4,
-    "true_positives": 2
+    "true_negatives": 43,
+    "false_positives": 10,
+    "false_negatives": 10,
+    "true_positives": 207
   },
-  "classification_report": "               precision    recall  f1-score   support\n\nSem Risco (0)       0.67      0.80      0.73        10\n Em Risco (1)       0.50      0.33      0.40         6\n\n     accuracy                           0.62        16\n    macro avg       0.58      0.57      0.56        16\n weighted avg       0.60      0.62      0.60        16\n",
-  "feature_importance": [],
-  "model_type": "SVC",
-  "n_test_samples": 16
+  "classification_report": "              precision    recall  f1-score   support\n\n No Risk (0)       0.81      0.81      0.81        53\n At Risk (1)       0.95      0.95      0.95       217\n\n    accuracy                           0.93       270\n   macro avg       0.88      0.88      0.88       270\nweighted avg       0.93      0.93      0.93       270\n",
+  "feature_importance": [
+    {
+      "feature": "ANO_INGRESSO_2022",
+      "importance": 0.24416661262512207
+    },
+    {
+      "feature": "INDE_CONCEITO_2020",
+      "importance": 0.14725235104560852
+    },
+    {
+      "feature": "INSTITUICAO_ENSINO_ALUNO_2021",
+      "importance": 0.06375131011009216
+    },
+    {
+      "feature": "REC_AVA_2_2022",
+      "importance": 0.034806519746780396
+    },
+    {
+      "feature": "FASE_2021",
+      "importance": 0.02287512645125389
+    },
+    {
+      "feature": "PEDRA_2021",
+      "importance": 0.021873461082577705
+    },
+    {
+      "feature": "PONTO_VIRADA_2021",
+      "importance": 0.02155718021094799
+    },
+    {
+      "feature": "TURMA_2021",
+      "importance": 0.021403079852461815
+    },
+    {
+      "feature": "SINALIZADOR_INGRESSANTE_2021",
+      "importance": 0.018458273261785507
+    },
+    {
+      "feature": "IEG_2021",
+      "importance": 0.01845150627195835
+    },
+    {
+      "feature": "INDE_2021",
+      "importance": 0.016991116106510162
+    },
+    {
+      "feature": "DESTAQUE_IPV_2020",
+      "importance": 0.01692848838865757
+    },
+    {
+      "feature": "IPV_2021",
+      "importance": 0.0169267188757658
+    },
+    {
+      "feature": "IPP_2020",
+      "importance": 0.01684911735355854
+    },
+    {
+      "feature": "IAA_2021",
+      "importance": 0.014085998758673668
+    },
+    {
+      "feature": "IPV_2020",
+      "importance": 0.011627019383013248
+    },
+    {
+      "feature": "ACADEMIC_COMPOSITE",
+      "importance": 0.011061305180191994
+    },
+    {
+      "feature": "IEG_mean",
+      "importance": 0.010392867028713226
+    },
+    {
+      "feature": "INDE_2020",
+      "importance": 0.01038409024477005
+    },
+    {
+      "feature": "IPP_mean",
+      "importance": 0.009947942569851875
+    },
+    {
+      "feature": "IDA_2021",
+      "importance": 0.009890834800899029
+    },
+    {
+      "feature": "IPS_IAA_INTERACTION",
+      "importance": 0.009667820297181606
+    },
+    {
+      "feature": "IDADE_ALUNO_2020",
+      "importance": 0.009318492375314236
+    },
+    {
+      "feature": "IPP_2021",
+      "importance": 0.00883055292069912
+    },
+    {
+      "feature": "IDA_mean",
+      "importance": 0.008139701560139656
+    },
+    {
+      "feature": "NOTA_ING_2022",
+      "importance": 0.007725083269178867
+    },
+    {
+      "feature": "IEG_2020",
+      "importance": 0.007525885943323374
+    },
+    {
+      "feature": "REC_EQUIPE_3_2021",
+      "importance": 0.007183585315942764
+    },
+    {
+      "feature": "IEG_2022",
+      "importance": 0.0070587098598480225
+    },
+    {
+      "feature": "FASE_2022",
+      "importance": 0.006868644617497921
+    },
+    {
+      "feature": "RISK_SCORE",
+      "importance": 0.0068280803970992565
+    },
+    {
+      "feature": "IPV_std",
+      "importance": 0.006733205169439316
+    },
+    {
+      "feature": "ANOS_PM_2020",
+      "importance": 0.006509074009954929
+    },
+    {
+      "feature": "IPS_mean",
+      "importance": 0.006311145611107349
+    },
+    {
+      "feature": "IEG_diff_2021_2022",
+      "importance": 0.006047253496944904
+    },
+    {
+      "feature": "REC_EQUIPE_1_2021",
+      "importance": 0.005738688632845879
+    },
+    {
+      "feature": "IDA_2020",
+      "importance": 0.005649840459227562
+    },
+    {
+      "feature": "CF_2022",
+      "importance": 0.005600506439805031
+    },
+    {
+      "feature": "IAA_diff_2021_2022",
+      "importance": 0.005580643191933632
+    },
+    {
+      "feature": "IPP_2022",
+      "importance": 0.005360690411180258
+    },
+    {
+      "feature": "IPS_2020",
+      "importance": 0.005349381361156702
+    },
+    {
+      "feature": "IDA_trend",
+      "importance": 0.005142403766512871
+    },
+    {
+      "feature": "IDA_diff_2021_2022",
+      "importance": 0.005124217830598354
+    },
+    {
+      "feature": "IPP_std",
+      "importance": 0.005082930438220501
+    },
+    {
+      "feature": "IPP_diff_2021_2022",
+      "importance": 0.004844530485570431
+    },
+    {
+      "feature": "IPS_diff_2021_2022",
+      "importance": 0.004702020436525345
+    },
+    {
+      "feature": "IPV_mean",
+      "importance": 0.0043896823190152645
+    },
+    {
+      "feature": "ENGAGEMENT_COMPOSITE",
+      "importance": 0.004341550171375275
+    },
+    {
+      "feature": "REC_EQUIPE_2_2021",
+      "importance": 0.004219665192067623
+    },
+    {
+      "feature": "CG_2022",
+      "importance": 0.00418484304100275
+    },
+    {
+      "feature": "FASE_TURMA_2020",
+      "importance": 0.004169098567217588
+    },
+    {
+      "feature": "IAA_trend",
+      "importance": 0.00403043394908309
+    },
+    {
+      "feature": "IPS_2021",
+      "importance": 0.003841818543151021
+    },
+    {
+      "feature": "CT_2022",
+      "importance": 0.0037694110069423914
+    },
+    {
+      "feature": "IDA_std",
+      "importance": 0.0037671083118766546
+    },
+    {
+      "feature": "NOTA_MAT_2022",
+      "importance": 0.0037426319904625416
+    },
+    {
+      "feature": "IAA_2022",
+      "importance": 0.0036167968064546585
+    },
+    {
+      "feature": "IPV_trend",
+      "importance": 0.002937001409009099
+    },
+    {
+      "feature": "IPV_diff_2021_2022",
+      "importance": 0.0027235085144639015
+    },
+    {
+      "feature": "TURMA_2022",
+      "importance": 0.0026961350813508034
+    },
+    {
+      "feature": "IEG_trend",
+      "importance": 0.0026104922872036695
+    },
+    {
+      "feature": "IEG_std",
+      "importance": 0.002265813061967492
+    },
+    {
+      "feature": "IAA_std",
+      "importance": 0.002106277970597148
+    },
+    {
+      "feature": "IDA_2022",
+      "importance": 0.002088971436023712
+    },
+    {
+      "feature": "INDE_IEG_INTERACTION",
+      "importance": 0.0020881949458271265
+    },
+    {
+      "feature": "DESTAQUE_IEG_2020",
+      "importance": 0.002008830662816763
+    },
+    {
+      "feature": "IAA_2020",
+      "importance": 0.0019361149752512574
+    },
+    {
+      "feature": "IAA_mean",
+      "importance": 0.0019122040830552578
+    },
+    {
+      "feature": "IPV_2022",
+      "importance": 0.0018412773497402668
+    },
+    {
+      "feature": "IPS_std",
+      "importance": 0.0017240187153220177
+    },
+    {
+      "feature": "INSTITUICAO_ENSINO_ALUNO_2020",
+      "importance": 0.001263291691429913
+    },
+    {
+      "feature": "NOTA_PORT_2022",
+      "importance": 0.0011941835982725024
+    },
+    {
+      "feature": "IPP_trend",
+      "importance": 0.001026458921842277
+    },
+    {
+      "feature": "REC_AVA_1_2022",
+      "importance": 0.0009000806021504104
+    },
+    {
+      "feature": "IPS_trend",
+      "importance": 0.0
+    },
+    {
+      "feature": "DESTAQUE_IEG_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "PONTO_VIRADA_2020",
+      "importance": 0.0
+    },
+    {
+      "feature": "PEDRA_2020",
+      "importance": 0.0
+    },
+    {
+      "feature": "DESTAQUE_IDA_2020",
+      "importance": 0.0
+    },
+    {
+      "feature": "REC_EQUIPE_4_2021",
+      "importance": 0.0
+    },
+    {
+      "feature": "BOLSISTA_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "INDE_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "PEDRA_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "DESTAQUE_IPV_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "DESTAQUE_IDA_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "PONTO_VIRADA_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "IPS_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "QTD_AVAL_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "REC_AVA_3_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "REC_AVA_4_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "INDICADO_BOLSA_2022",
+      "importance": 0.0
+    },
+    {
+      "feature": "BOLSISTA_INDE_INTERACTION",
+      "importance": 0.0
+    }
+  ],
+  "model_type": "XGBClassifier",
+  "n_test_samples": 270
 }

@@ -101,37 +101,42 @@ st.divider()
 st.markdown("### Arquitetura")
 
 st.markdown(
-    "Este dashboard **consome a API REST** hospedada no HuggingFace Spaces. "
-    "Nenhum modelo é carregado localmente — todas as predições e métricas "
-    "são obtidas via chamadas HTTP aos endpoints da API."
+    "Este dashboard **consome a API REST (FastAPI)** que roda internamente "
+    "no mesmo container. O Streamlit é a interface exposta ao usuário, enquanto "
+    "o FastAPI processa as predições e métricas em background na porta `8000`."
 )
 
-docs_url = f"{API_URL}/docs"
-redoc_url = f"{API_URL}/redoc"
-
-st.markdown(
-    f"**Acesse a API diretamente:** "
-    f"[Swagger UI (interativo)]({docs_url}) · "
-    f"[ReDoc (documentação)]({redoc_url})"
+st.info(
+    "A API FastAPI roda **internamente** no container e não é acessível "
+    "diretamente pela URL do Space. Para testar os endpoints diretamente, "
+    "rode o projeto localmente com `docker compose up` ou `uvicorn api.main:app`."
 )
 
 st.divider()
 
-st.markdown("### Endpoints Disponíveis")
+st.markdown("### Endpoints da API REST")
 
 st.markdown(
-    f"""
+    """
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| `GET` | [`/health`]({API_URL}/health) | Status da API e do modelo carregado |
-| `GET` | [`/`]({API_URL}/) | Informações gerais da API (versão, ambiente, lista de endpoints) |
-| `GET` | [`/metrics`]({API_URL}/metrics) | Métricas de avaliação do modelo (accuracy, F1, AUC-ROC, confusion matrix, feature importance) |
-| `GET` | [`/monitoring/drift`]({API_URL}/monitoring/drift) | Monitoramento de drift nas predições em produção |
-| `POST` | [`/predict`]({docs_url}#/Predi%C3%A7%C3%B5es/predict_predict_post) | Predição de risco para **um** estudante |
-| `POST` | [`/predict/batch`]({docs_url}#/Predi%C3%A7%C3%B5es/predict_batch_predict_batch_post) | Predição em lote para **múltiplos** estudantes |
-| `GET` | [`/docs`]({docs_url}) | Swagger UI — interface interativa para testar a API |
-| `GET` | [`/redoc`]({redoc_url}) | ReDoc — documentação detalhada dos schemas |
+| `GET` | `/health` | Status da API e do modelo carregado |
+| `GET` | `/` | Informações gerais da API (versão, ambiente, lista de endpoints) |
+| `GET` | `/metrics` | Métricas de avaliação do modelo (accuracy, F1, AUC-ROC, confusion matrix, feature importance) |
+| `GET` | `/monitoring/drift` | Monitoramento de drift nas predições em produção |
+| `POST` | `/predict` | Predição de risco para **um** estudante (JSON body) |
+| `POST` | `/predict/batch` | Predição em lote para **múltiplos** estudantes |
+| `GET` | `/docs` | **Swagger UI** — interface interativa para testar a API |
+| `GET` | `/redoc` | **ReDoc** — documentação detalhada dos schemas |
 """
+)
+
+st.markdown("##### Acesso local")
+st.code(
+    "# Rodar localmente para acessar Swagger UI e testar endpoints\n"
+    "uvicorn api.main:app --reload\n"
+    "# Abrir: http://localhost:8000/docs",
+    language="bash",
 )
 
 st.divider()
