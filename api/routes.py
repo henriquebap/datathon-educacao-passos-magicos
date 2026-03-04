@@ -133,10 +133,17 @@ async def get_metrics(request: Request):
     predictor = getattr(request.app.state, "predictor", None)
     model_type = type(predictor.model).__name__ if predictor else "desconhecido"
 
+    n_test_samples = eval_results.get("n_test_samples") if eval_results else None
+    confusion_matrix = eval_results.get("confusion_matrix") if eval_results else None
+    feature_importance = eval_results.get("feature_importance") if eval_results else None
+
     return MetricsResponse(
         model_type=model_type,
         metrics=metrics,
         prediction_stats=stats,
+        n_test_samples=n_test_samples,
+        confusion_matrix=confusion_matrix,
+        feature_importance=feature_importance,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 

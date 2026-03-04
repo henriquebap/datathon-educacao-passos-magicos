@@ -128,6 +128,9 @@ class MetricsResponse(BaseModel):
     model_type: str
     metrics: dict
     prediction_stats: dict
+    n_test_samples: Optional[int] = None
+    confusion_matrix: Optional[dict] = None
+    feature_importance: Optional[list] = None
     timestamp: str
 
 

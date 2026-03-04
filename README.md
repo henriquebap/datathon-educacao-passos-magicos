@@ -264,7 +264,7 @@ No contexto de defasagem escolar, precisamos balancear:
 - **Recall**: não deixar de identificar alunos em risco (minimizar falsos negativos)
 - **Precision**: evitar alarmes excessivos que sobrecarreguem a equipe pedagógica
 
-O F1-Score equilibra ambos. Utilizamos `class_weight="balanced"` para lidar com desbalanceamento entre as classes.
+O F1-Score equilibra ambos. O modelo final (**XGBClassifier**) foi selecionado automaticamente por obter o melhor F1-Score na cross-validation estratificada (5 folds) dentre os cinco modelos candidatos.
 
 ### 5.5 Tratamento de Data Leakage
 

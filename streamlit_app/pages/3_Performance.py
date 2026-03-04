@@ -40,11 +40,14 @@ model_type = metrics_data.get("model_type", "N/A")
 metrics = metrics_data.get("metrics", {})
 prediction_stats = metrics_data.get("prediction_stats", {})
 
+n_test = metrics_data.get("n_test_samples") or metrics.pop("n_test_samples", None)
+
 col1, col2 = st.columns([1, 2])
 
 with col1:
     st.metric("Modelo em Produção", model_type)
-    st.metric("Total de Predições", prediction_stats.get("total_predictions", 0))
+    if n_test:
+        st.metric("Amostras de Teste", n_test)
 
 with col2:
     metric_labels = {
@@ -87,7 +90,53 @@ if available:
         height=400,
     )
     st.plotly_chart(fig_metrics, use_container_width=True)
-    st.divider()
+
+# --- Confusion Matrix ---
+cm_data = metrics_data.get("confusion_matrix")
+if cm_data and "matrix" in cm_data:
+    st.subheader("Matriz de Confusão")
+    col_cm1, col_cm2 = st.columns([1, 1])
+
+    with col_cm1:
+        matrix = cm_data["matrix"]
+        fig_cm = go.Figure(data=go.Heatmap(
+            z=matrix,
+            x=["Pred: Sem Risco", "Pred: Em Risco"],
+            y=["Real: Sem Risco", "Real: Em Risco"],
+            text=[[str(v) for v in row] for row in matrix],
+            texttemplate="%{text}",
+            colorscale="Blues",
+            showscale=False,
+        ))
+        fig_cm.update_layout(title=f"Confusion Matrix ({n_test or '?'} amostras)", height=350)
+        st.plotly_chart(fig_cm, use_container_width=True)
+
+    with col_cm2:
+        st.metric("Verdadeiros Positivos (TP)", cm_data.get("true_positives", "—"))
+        st.metric("Verdadeiros Negativos (TN)", cm_data.get("true_negatives", "—"))
+        st.metric("Falsos Positivos (FP)", cm_data.get("false_positives", "—"))
+        st.metric("Falsos Negativos (FN)", cm_data.get("false_negatives", "—"))
+
+# --- Feature Importance ---
+feat_imp = metrics_data.get("feature_importance")
+if feat_imp:
+    st.subheader("Top 15 Features mais Importantes")
+    top_feats = feat_imp[:15]
+    fig_feat = go.Figure(go.Bar(
+        x=[f["importance"] for f in reversed(top_feats)],
+        y=[f["feature"] for f in reversed(top_feats)],
+        orientation="h",
+        marker_color="#3498db",
+    ))
+    fig_feat.update_layout(
+        title=f"Feature Importance — {model_type}",
+        xaxis_title="Importância",
+        height=500,
+        margin=dict(l=200),
+    )
+    st.plotly_chart(fig_feat, use_container_width=True)
+
+st.divider()
 
 # --- Estatísticas de predições ---
 st.header("3. Estatísticas de Predições em Produção")
@@ -155,7 +204,10 @@ No contexto de defasagem escolar, o F1-Score é a métrica principal porque equi
   significam alunos em risco que não receberão suporte.
 - **Precision**: Evitar alarmes falsos que sobrecarreguem a equipe pedagógica.
 
-Utilizamos `class_weight="balanced"` para lidar com o desbalanceamento entre as classes.
+O modelo em produção (**XGBClassifier**) foi selecionado automaticamente por ter
+obtido o melhor F1-Score na cross-validation estratificada (5 folds) dentre os
+cinco modelos candidatos (Logistic Regression, Random Forest, Gradient Boosting,
+XGBoost e SVM).
 """)
 
 st.divider()
